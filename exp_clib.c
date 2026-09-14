@@ -2464,6 +2464,7 @@ expectv(
 	int remtime;		/* remaining time in timeout */
 
 	struct f *f;
+	char *new_buffer;
 	int return_val = 0;
 	int sys_error = 0;
 #define return_normally(x)	{return_val = x; goto cleanup;}
@@ -2519,8 +2520,9 @@ expectv(
 				bufsiz-1);
 			buf_length = bufsiz-1;
 		}
-		exp_buffer = realloc(exp_buffer,bufsiz+1);
-		if (!exp_buffer) return_errno(ENOMEM);
+		new_buffer = realloc(exp_buffer,bufsiz+1);
+		if (!new_buffer) return_errno(ENOMEM);
+		exp_buffer = new_buffer;
 		exp_buffer[buf_length] = '\0';
 		exp_buffer_end = exp_buffer + buf_length;
 		f->msize = bufsiz;
