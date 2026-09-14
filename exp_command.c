@@ -2403,7 +2403,7 @@ Exp_ExpInternalObjCmd(
 {
     int newChannel = FALSE;
     Tcl_Channel oldChannel;
-    static char resultbuf[1000];
+    Tcl_Obj *resultObj;
     int flag, i;
 
     static char* options[] = {
@@ -2430,16 +2430,19 @@ Exp_ExpInternalObjCmd(
 	}
 	switch ((enum options) index) {
 	    case INTERNAL_INFO:
-		/* FUTURE: Construct a proper list Tcl_Obj here */
 		/* Should check that there are no arguments coming after -info */
 
-		resultbuf[0] = '\0';
+		resultObj = Tcl_NewListObj(0,NULL);
 		oldChannel = expDiagChannelGet();
 		if (oldChannel) {
-		    sprintf(resultbuf,"-f %s ",expDiagFilename());
+		    Tcl_ListObjAppendElement(interp,resultObj,
+			    Tcl_NewStringObj("-f",-1));
+		    Tcl_ListObjAppendElement(interp,resultObj,
+			    Tcl_NewStringObj(expDiagFilename(),-1));
 		}
-		strcat(resultbuf,expDiagToStderrGet()?"1":"0");
-		Tcl_SetResult(interp,resultbuf,TCL_STATIC);
+		Tcl_ListObjAppendElement(interp,resultObj,
+			Tcl_NewBooleanObj(expDiagToStderrGet()));
+		Tcl_SetObjResult(interp,resultObj);
 		return TCL_OK;
 	    case INTERNAL_F:
 		i ++;
