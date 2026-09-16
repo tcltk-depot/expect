@@ -272,9 +272,16 @@ pty_stty(
     const char *s,		/* args to stty */
     const char *name)		/* name of pty */
 {
-#define MAX_ARGLIST 10240
-	char buf[MAX_ARGLIST];	/* overkill is easier */
+	char *buf;
+	size_t len;
 	RETSIGTYPE (*old)(int);	/* save old sigalarm handler */
+	int ignored;
+
+	/* the command, two separating spaces, the redirection character and
+	   its space, and the terminating NUL */
+	len = strlen(STTY_BIN) + strlen(s) + strlen(name) + 5;
+	buf = malloc(len);
+	if (!buf) return;
 
 #ifdef STTY_READS_STDOUT
 	sprintf(buf,"%s %s > %s",STTY_BIN,s,name);
@@ -282,9 +289,10 @@ pty_stty(
 	sprintf(buf,"%s %s < %s",STTY_BIN,s,name);
 #endif
 	old = signal(SIGCHLD, SIG_DFL);
-	int ignored = system(buf); /* TODO - handle errors returns? */
+	ignored = system(buf); /* TODO - handle errors returns? */
 	(void) ignored; /* silence warning about ignored function return */
 	signal(SIGCHLD, old);	/* restore signal handler */
+	free(buf);
 }
 
 int exp_dev_tty;	/* file descriptor to /dev/tty or -1 if none */
