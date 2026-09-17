@@ -388,9 +388,10 @@ Exp_SttyCmd(
 	int cooked = FALSE;
 	int was_raw, was_echo;
 
-	char **redirect;	/* location of "<" */
+	char **redirect = 0;	/* location of "<" */
+	char *redirect_save = 0;/* saved contents of *redirect */
 	const char *infile = 0;
-	int fd;			/* (slave) fd of infile */
+	int fd = -1;		/* (slave) fd of infile */
 	int master = -1;	/* master fd of infile */
 	const char **argv0 = argv;
 
@@ -412,7 +413,8 @@ Exp_SttyCmd(
 				if (-1 == (fd = open(infile,2))) {
 					expErrorLog("couldn't open %s: %s",
 					 infile,Tcl_PosixError(interp));
-					return TCL_ERROR;
+					rc = TCL_ERROR;
+					goto done;
 				}
 			}
 			break;
@@ -513,7 +515,7 @@ Exp_SttyCmd(
 		/* a different tty */
 
 		/* temporarily zap redirect */
-		char *redirect_save = *redirect;
+		redirect_save = *redirect;
 		*redirect = 0;
 
 		for (argv=argv0+1;*argv;argv++) {
@@ -545,8 +547,10 @@ Exp_SttyCmd(
 
 		/* restore redirect */
 		*redirect = redirect_save;
+		redirect_save = 0;
 
 		close(fd);	/* no more use for this, from now on */
+		fd = -1;
 				/* pass by name */
 
 		if (saw_unknown_stty_arg || no_args) {
@@ -564,6 +568,10 @@ Exp_SttyCmd(
 		}
 	}
  done:
+	/* the "rows" and "columns" queries above jump straight here, so
+	   undo the redirect zap and close the tty from this path too */
+	if (redirect_save) *redirect = redirect_save;
+	if (fd != -1) close(fd);
 	exp_trap_on(master);
 
 	return rc;
