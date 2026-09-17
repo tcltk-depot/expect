@@ -1786,8 +1786,22 @@ fdfp2f(
     int fd,
     FILE *fp)
 {
-	if (fd == -1) return(fs + fileno(fp));
-	else return(fs + fd);
+	int n;
+
+	if (fd == -1) {
+		if (!fp) return 0;
+		n = fileno(fp);
+	} else {
+		n = fd;
+	}
+
+	/* reject descriptors never registered through exp_spawnv(),
+	   exp_spawnfd() or exp_popen() */
+	if (!fs) return 0;
+	if (n < 0 || n > fd_alloc_max) return 0;
+	if (!fs[n].valid) return 0;
+
+	return(fs + n);
 }
 
 static struct f *
@@ -2470,7 +2484,9 @@ expectv(
 #define return_errno(x)	{sys_error = x; goto cleanup;}
 
 	f = fdfp2f(fd,fp);
-	if (!f) return_errno(ENOMEM);
+	/* return before the cleanup path, which would store the current
+	   buffer pointers back through f */
+	if (!f) sysreturn(EBADF);
 
 	exp_buffer = f->buffer;
 	exp_buffer_end = f->buffer_end;
