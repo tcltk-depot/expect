@@ -2192,14 +2192,22 @@ exp_indirect_update1(
 		    exp_cmdtype_printable(ecmd->cmdtype))) {
 	    /* Note: Cannot construct a Tcl_Obj* here, the function is a
 	     * Tcl_VarTraceProc and the API wants a char*.
-	     *
-	     * DANGER: The buffer may overflow if either the existing result,
-	     * the variable name, or both become to large.
 	     */
-		static char msg[200];
-		sprintf(msg,"%s from indirect variable (%s)",
-		    Tcl_GetStringResult (interp),exp_i->variable);
-		return msg;
+		static Tcl_DString msg;
+		static int msg_initialized = FALSE;
+
+		if (!msg_initialized) {
+		    Tcl_DStringInit(&msg);
+		    msg_initialized = TRUE;
+		} else {
+		    Tcl_DStringFree(&msg);
+		}
+
+		Tcl_DStringAppend(&msg,Tcl_GetStringResult(interp),-1);
+		Tcl_DStringAppend(&msg," from indirect variable (",-1);
+		Tcl_DStringAppend(&msg,exp_i->variable,-1);
+		Tcl_DStringAppend(&msg,")",-1);
+		return Tcl_DStringValue(&msg);
 	    }
 	}
 
