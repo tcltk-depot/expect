@@ -1,10 +1,8 @@
-#!/bin/sh
-# -*- tcl -*-
+#!/usr/bin/env tclsh
+
 # Parsing the content of /dev/urandom as UTF-8 is a stupid idea, so
 # make sure we're in an ASCII locale first.
-#
-# The next line is executed by /bin/sh, but not tcl \
-LC_ALL=C exec tclsh "$0" ${1+"$@"}
+set env(LC_ALL) C
 
 package require Expect
 
