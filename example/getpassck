@@ -1,6 +1,4 @@
-#!/bin/sh
-# \
-exec expect "$0" ${1+"$@"}
+#!/usr/bin/env tclsh
 #
 # Name: getpassck
 #
@@ -21,6 +19,8 @@ exec expect "$0" ${1+"$@"}
 # Author: Don Libes <don@libes.com>
 # Version: 1.0, Wed Mar  9 12:36:12 EST 2005
 # 
+
+package require Expect
 
 for {set i 0} {$i < 100} {incr i} {
  spawn -noecho su
